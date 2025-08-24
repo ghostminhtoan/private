@@ -1,5 +1,5 @@
 # PowerShell script để tải và cài đặt Comfort Clipboard Pro
-# Tạo shortcut trên Desktop công cộng và Start Menu
+# Tạo shortcut trên Desktop công cộng, Start Menu và Startup
 
 # Hàm hiển thị thông báo màu sắc
 function Write-ColorOutput {
@@ -56,6 +56,22 @@ function Create-Shortcut {
     catch {
         Write-ColorOutput "Lỗi khi tạo shortcut: $($_.Exception.Message)" "Red"
         return $false
+    }
+}
+
+# Hàm mô phỏng phím Windows + Insert
+function Invoke-WindowsInsert {
+    try {
+        Write-ColorOutput "Đang mở Clipboard bằng Windows + Insert..." "Yellow"
+        
+        # Sử dụng SendKeys để mô phỏng tổ hợp phím
+        Add-Type -AssemblyName System.Windows.Forms
+        [System.Windows.Forms.SendKeys]::SendWait('^{INSERT}')
+        
+        Write-ColorOutput "Đã gửi tổ hợp phím Windows + Insert" "Green"
+    }
+    catch {
+        Write-ColorOutput "Lỗi khi gửi tổ hợp phím: $($_.Exception.Message)" "Red"
     }
 }
 
@@ -129,6 +145,11 @@ if ($downloadSuccess) {
     $startMenuShortcutPath = Join-Path $startMenuPath "Comfort Clipboard Pro.lnk"
     Create-Shortcut -SourceExe $exePath -ShortcutPath $startMenuShortcutPath -Description "Comfort Clipboard Pro Application"
     
+    # Tạo shortcut trong Startup để chạy cùng Windows
+    $startupPath = [Environment]::GetFolderPath("CommonStartup")
+    $startupShortcutPath = Join-Path $startupPath "Comfort Clipboard Pro.lnk"
+    Create-Shortcut -SourceExe $exePath -ShortcutPath $startupShortcutPath -Description "Comfort Clipboard Pro Application - Run at Startup"
+    
     # Chạy file
     try {
         Write-ColorOutput "Đang khởi chạy chương trình..." "Yellow"
@@ -144,13 +165,27 @@ if ($downloadSuccess) {
         Write-ColorOutput "xin hãy donate gói snack hoặc cốc cà phê cho tác giả" "Yellow"
         Write-Host ""
         
+        # Đợi 5 giây trước khi mở trình duyệt
+        Write-ColorOutput "Đang đợi 5 giây trước khi mở trang donate..." "Yellow"
+        
+        # Hiển thị đồng hồ đếm ngược
+        for ($i = 5; $i -gt 0; $i--) {
+            Write-Host "Mở trình duyệt sau $i giây..." -ForegroundColor Gray
+            Start-Sleep -Seconds 1
+        }
+        
         # Mở trình duyệt với trang donate
-        Write-ColorOutput "Đang mở trang donate..." "Yellow"
-        Start-Sleep -Seconds 2
         Open-Browser -Url $donateUrl
+        
+        # Đợi thêm 2 giây trước khi mô phỏng phím
+        Start-Sleep -Seconds 2
+        
+        # Mô phỏng tổ hợp phím Windows + Insert để mở clipboard
+        Invoke-WindowsInsert
         
         Write-Host ""
         Write-ColorOutput "Cài đặt hoàn tất! Cảm ơn bạn đã sử dụng!" "Green"
+        Write-ColorOutput "Chương trình sẽ tự động khởi chạy cùng Windows." "Green"
     }
     catch {
         Write-ColorOutput "Lỗi khi khởi chạy chương trình: $($_.Exception.Message)" "Red"
